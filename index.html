@@ -286,12 +286,24 @@
 
             <div class="form-group">
                 <label for="minAmount">Valor Mínimo Total (R$):</label>
-                <input type="number" id="minAmount" step="1" min="1" placeholder="Ex: 300">
+                <input type="number" id="minAmount" step="1" min="1" placeholder="Ex: 200">
+            </div>
+
+            <div class="form-group">
+                <label for="maxAmount">Valor Máximo Total (R$):</label>
+                <input type="number" id="maxAmount" step="1" min="1" placeholder="Ex: 400">
             </div>
 
             <div class="form-group">
                 <label for="roundTo">Arredondar para múltiplos de:</label>
-                <input type="number" id="roundTo" step="1" min="1" value="5" placeholder="Ex: 5 ou 10">
+                <input type="number" id="roundTo" step="1" min="1" value="10" placeholder="Ex: 10, 20, 25, 50">
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="balanceGains" checked style="margin-right: 8px;">
+                    Equilibrar ganhos (deixar valores mais próximos)
+                </label>
             </div>
 
             <button class="btn" onclick="calculateSurebet()">🧮 Calcular Surebet</button>
@@ -381,11 +393,18 @@
             const oddA = parseFloat(document.getElementById('oddA').value);
             const oddB = parseFloat(document.getElementById('oddB').value);
             const minAmount = parseFloat(document.getElementById('minAmount').value);
-            const roundTo = parseInt(document.getElementById('roundTo').value) || 5;
+            const maxAmount = parseFloat(document.getElementById('maxAmount').value);
+            const roundTo = parseInt(document.getElementById('roundTo').value) || 10;
+            const balanceGains = document.getElementById('balanceGains').checked;
 
             // Validação dos inputs
             if (!oddA || !oddB || !minAmount || oddA <= 1 || oddB <= 1 || minAmount <= 0) {
                 showWarning('Por favor, preencha todos os campos com valores válidos!');
+                return;
+            }
+
+            if (maxAmount && maxAmount < minAmount) {
+                showWarning('O valor máximo deve ser maior que o valor mínimo!');
                 return;
             }
 
@@ -402,30 +421,78 @@
                 showWarning(`❌ ATENÇÃO: Esta não é uma surebet! Margem negativa de ${Math.abs(marginPercentage).toFixed(2)}%. Você pode ter prejuízo!`);
             }
 
-            // Calcular distribuição ideal do dinheiro
-            const idealBetA = minAmount * marginA / totalMargin;
-            const idealBetB = minAmount * marginB / totalMargin;
+            // Encontrar a melhor combinação dentro da faixa
+            let bestCombination = null;
+            let bestScore = -Infinity;
 
-            // Arredondar os valores
-            let roundedBetA = roundToMultiple(idealBetA, roundTo);
-            let roundedBetB = roundToMultiple(idealBetB, roundTo);
+            const targetAmount = maxAmount || minAmount * 1.5; // Se não definir máximo, usa 50% a mais que o mínimo
+            const maxIterations = Math.min(((targetAmount - minAmount) / roundTo) + 1, 100); // Limitar iterações
 
-            // Garantir que a soma seja pelo menos o mínimo
-            const totalRounded = roundedBetA + roundedBetB;
-            if (totalRounded < minAmount) {
-                const difference = minAmount - totalRounded;
-                // Adicionar a diferença na aposta com menor odd (maior margem)
-                if (marginA > marginB) {
-                    roundedBetA += difference;
-                } else {
-                    roundedBetB += difference;
+            for (let totalBet = minAmount; totalBet <= targetAmount; totalBet += roundTo) {
+                // Calcular distribuição ideal para este total
+                const idealBetA = totalBet * marginA / totalMargin;
+                const idealBetB = totalBet * marginB / totalMargin;
+
+                // Testar várias combinações arredondadas próximas ao ideal
+                const testCombinations = [];
+                
+                for (let offsetA = -roundTo * 2; offsetA <= roundTo * 2; offsetA += roundTo) {
+                    for (let offsetB = -roundTo * 2; offsetB <= roundTo * 2; offsetB += roundTo) {
+                        const testBetA = Math.max(roundTo, roundToMultiple(idealBetA + offsetA, roundTo));
+                        const testBetB = Math.max(roundTo, roundToMultiple(idealBetB + offsetB, roundTo));
+                        const testTotal = testBetA + testBetB;
+                        
+                        if (testTotal >= minAmount && (!maxAmount || testTotal <= maxAmount)) {
+                            testCombinations.push({ betA: testBetA, betB: testBetB, total: testTotal });
+                        }
+                    }
                 }
+
+                // Avaliar cada combinação
+                testCombinations.forEach(combo => {
+                    const profitA = (combo.betA * oddA) - combo.total;
+                    const profitB = (combo.betB * oddB) - combo.total;
+                    const guaranteedProfit = Math.min(profitA, profitB);
+                    
+                    if (guaranteedProfit <= 0 && isSurebet) return; // Pular se não há lucro garantido
+
+                    let score = guaranteedProfit;
+
+                    if (balanceGains) {
+                        // Penalizar diferenças grandes entre os lucros
+                        const profitDifference = Math.abs(profitA - profitB);
+                        const balanceBonus = Math.max(0, 50 - profitDifference); // Bonus por equilíbrio
+                        score += balanceBonus;
+                    }
+
+                    // Bonus por valores "naturais" (múltiplos maiores são mais naturais)
+                    const naturalnessBonus = (combo.betA % 50 === 0 ? 10 : 0) + (combo.betB % 50 === 0 ? 10 : 0);
+                    score += naturalnessBonus;
+
+                    // Penalizar valores muito específicos (terminados em números estranhos)
+                    const weirdnessA = combo.betA % 10;
+                    const weirdnessB = combo.betB % 10;
+                    if (weirdnessA !== 0 && weirdnessA !== 5) score -= 5;
+                    if (weirdnessB !== 0 && weirdnessB !== 5) score -= 5;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestCombination = {
+                            betA: combo.betA,
+                            betB: combo.betB,
+                            total: combo.total,
+                            profitA: profitA,
+                            profitB: profitB,
+                            guaranteedProfit: guaranteedProfit
+                        };
+                    }
+                });
             }
 
-            // Calcular lucros
-            const profitA = (roundedBetA * oddA) - (roundedBetA + roundedBetB);
-            const profitB = (roundedBetB * oddB) - (roundedBetA + roundedBetB);
-            const guaranteedProfit = Math.min(profitA, profitB);
+            if (!bestCombination) {
+                showWarning('Não foi possível encontrar uma combinação adequada com os parâmetros fornecidos.');
+                return;
+            }
 
             // Exibir resultados
             document.getElementById('isSurebet').textContent = isSurebet ? '✅ SIM' : '❌ NÃO';
@@ -434,24 +501,26 @@
             document.getElementById('margin').textContent = `${marginPercentage.toFixed(2)}%`;
             document.getElementById('margin').className = `result-value ${isSurebet ? 'profit-positive' : 'profit-negative'}`;
             
-            document.getElementById('betA').textContent = `R$ ${roundedBetA.toFixed(2)}`;
-            document.getElementById('betB').textContent = `R$ ${roundedBetB.toFixed(2)}`;
-            document.getElementById('totalBet').textContent = `R$ ${(roundedBetA + roundedBetB).toFixed(2)}`;
+            document.getElementById('betA').textContent = `R$ ${bestCombination.betA.toFixed(2)}`;
+            document.getElementById('betB').textContent = `R$ ${bestCombination.betB.toFixed(2)}`;
+            document.getElementById('totalBet').textContent = `R$ ${bestCombination.total.toFixed(2)}`;
             
-            document.getElementById('profitA').textContent = `R$ ${profitA.toFixed(2)}`;
-            document.getElementById('profitA').className = `result-value ${profitA >= 0 ? 'profit-positive' : 'profit-negative'}`;
+            document.getElementById('profitA').textContent = `R$ ${bestCombination.profitA.toFixed(2)}`;
+            document.getElementById('profitA').className = `result-value ${bestCombination.profitA >= 0 ? 'profit-positive' : 'profit-negative'}`;
             
-            document.getElementById('profitB').textContent = `R$ ${profitB.toFixed(2)}`;
-            document.getElementById('profitB').className = `result-value ${profitB >= 0 ? 'profit-positive' : 'profit-negative'}`;
+            document.getElementById('profitB').textContent = `R$ ${bestCombination.profitB.toFixed(2)}`;
+            document.getElementById('profitB').className = `result-value ${bestCombination.profitB >= 0 ? 'profit-positive' : 'profit-negative'}`;
             
-            document.getElementById('guaranteedProfit').textContent = `R$ ${guaranteedProfit.toFixed(2)}`;
-            document.getElementById('guaranteedProfit').className = `result-value ${guaranteedProfit >= 0 ? 'profit-positive' : 'profit-negative'}`;
+            document.getElementById('guaranteedProfit').textContent = `R$ ${bestCombination.guaranteedProfit.toFixed(2)}`;
+            document.getElementById('guaranteedProfit').className = `result-value ${bestCombination.guaranteedProfit >= 0 ? 'profit-positive' : 'profit-negative'}`;
 
             // Mostrar resultados
             document.getElementById('results').style.display = 'block';
 
-            if (isSurebet && guaranteedProfit > 0) {
-                showSuccess(`🎉 Excelente! Você tem uma surebet com lucro garantido de R$ ${guaranteedProfit.toFixed(2)}!`);
+            if (isSurebet && bestCombination.guaranteedProfit > 0) {
+                const profitDiff = Math.abs(bestCombination.profitA - bestCombination.profitB);
+                const balanceText = profitDiff < 5 ? ' (Lucros bem equilibrados!)' : '';
+                showSuccess(`🎉 Surebet encontrada! Lucro garantido: R$ ${bestCombination.guaranteedProfit.toFixed(2)}${balanceText}`);
             }
         }
 
@@ -555,7 +624,7 @@
             updateProfitDisplay();
             
             // Adicionar eventos para calcular automaticamente quando os valores mudarem
-            ['oddA', 'oddB', 'minAmount', 'roundTo'].forEach(id => {
+            ['oddA', 'oddB', 'minAmount', 'maxAmount', 'roundTo'].forEach(id => {
                 document.getElementById(id).addEventListener('input', function() {
                     // Limpar mensagens anteriores
                     document.getElementById('warning').style.display = 'none';
@@ -565,4 +634,4 @@
         });
     </script>
 </body>
-  </html>
+                    </html>
