@@ -1,1 +1,568 @@
-ALURAFLIX
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Surebet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: #e9ecef;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: white;
+            color: #ff6b6b;
+            border-bottom: 3px solid #ff6b6b;
+        }
+
+        .tab:hover {
+            background: #dee2e6;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .results {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .result-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .profit-positive {
+            color: #28a745;
+        }
+
+        .profit-negative {
+            color: #dc3545;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .profit-history {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+
+        .profit-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .profit-entry:last-child {
+            margin-bottom: 0;
+        }
+
+        .profit-entry-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .profit-entry-value {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .total-profit {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .total-profit h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .total-profit .value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            margin-top: 15px;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .tab {
+                padding: 12px 8px;
+                font-size: 14px;
+            }
+            
+            .tab-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Calculadora de Surebet</h1>
+            <p>Maximize seus lucros com apostas seguras</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('calculator')">Calculadora</button>
+            <button class="tab" onclick="showTab('profits')">Controle de Lucros</button>
+        </div>
+
+        <div id="calculator" class="tab-content active">
+            <div class="form-group">
+                <label for="oddA">Odd Casa A:</label>
+                <input type="number" id="oddA" step="0.01" min="1.01" placeholder="Ex: 2.10">
+            </div>
+
+            <div class="form-group">
+                <label for="oddB">Odd Casa B:</label>
+                <input type="number" id="oddB" step="0.01" min="1.01" placeholder="Ex: 1.80">
+            </div>
+
+            <div class="form-group">
+                <label for="minAmount">Valor Mínimo Total (R$):</label>
+                <input type="number" id="minAmount" step="1" min="1" placeholder="Ex: 300">
+            </div>
+
+            <div class="form-group">
+                <label for="roundTo">Arredondar para múltiplos de:</label>
+                <input type="number" id="roundTo" step="1" min="1" value="5" placeholder="Ex: 5 ou 10">
+            </div>
+
+            <button class="btn" onclick="calculateSurebet()">🧮 Calcular Surebet</button>
+
+            <div id="results" class="results" style="display: none;">
+                <div class="result-item">
+                    <span class="result-label">É Surebet?</span>
+                    <span id="isSurebet" class="result-value"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Margem:</span>
+                    <span id="margin" class="result-value"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Apostar Casa A:</span>
+                    <span id="betA" class="result-value"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Apostar Casa B:</span>
+                    <span id="betB" class="result-value"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Total Apostado:</span>
+                    <span id="totalBet" class="result-value"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Lucro se Casa A ganhar:</span>
+                    <span id="profitA" class="result-value"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Lucro se Casa B ganhar:</span>
+                    <span id="profitB" class="result-value"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Lucro Garantido:</span>
+                    <span id="guaranteedProfit" class="result-value"></span>
+                </div>
+            </div>
+
+            <div id="warning" class="warning" style="display: none;"></div>
+            <div id="success" class="success" style="display: none;"></div>
+        </div>
+
+        <div id="profits" class="tab-content">
+            <div class="total-profit">
+                <h3>💰 Lucro Total Acumulado</h3>
+                <div class="value" id="totalProfitDisplay">R$ 0,00</div>
+            </div>
+
+            <div class="form-group">
+                <label for="newProfit">Adicionar Novo Lucro (R$):</label>
+                <input type="number" id="newProfit" step="0.01" placeholder="Ex: 25.50">
+            </div>
+
+            <button class="btn" onclick="addProfit()">➕ Adicionar Lucro</button>
+            <button class="btn clear-btn" onclick="clearProfits()">🗑️ Limpar Histórico</button>
+
+            <div class="profit-history" id="profitHistory">
+                <p style="text-align: center; color: #666; font-style: italic;">Nenhum lucro registrado ainda</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Função para alternar entre abas
+        function showTab(tabName) {
+            // Esconder todas as abas
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Remover classe active de todos os botões
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(button => button.classList.remove('active'));
+
+            // Mostrar aba selecionada
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Função para arredondar para múltiplos específicos
+        function roundToMultiple(number, multiple) {
+            return Math.round(number / multiple) * multiple;
+        }
+
+        // Função principal para calcular surebet
+        function calculateSurebet() {
+            const oddA = parseFloat(document.getElementById('oddA').value);
+            const oddB = parseFloat(document.getElementById('oddB').value);
+            const minAmount = parseFloat(document.getElementById('minAmount').value);
+            const roundTo = parseInt(document.getElementById('roundTo').value) || 5;
+
+            // Validação dos inputs
+            if (!oddA || !oddB || !minAmount || oddA <= 1 || oddB <= 1 || minAmount <= 0) {
+                showWarning('Por favor, preencha todos os campos com valores válidos!');
+                return;
+            }
+
+            // Calcular margem (inverso das odds)
+            const marginA = 1 / oddA;
+            const marginB = 1 / oddB;
+            const totalMargin = marginA + marginB;
+
+            // Verificar se é surebet
+            const isSurebet = totalMargin < 1;
+            const marginPercentage = ((1 - totalMargin) * 100);
+
+            if (!isSurebet) {
+                showWarning(`❌ ATENÇÃO: Esta não é uma surebet! Margem negativa de ${Math.abs(marginPercentage).toFixed(2)}%. Você pode ter prejuízo!`);
+            }
+
+            // Calcular distribuição ideal do dinheiro
+            const idealBetA = minAmount * marginA / totalMargin;
+            const idealBetB = minAmount * marginB / totalMargin;
+
+            // Arredondar os valores
+            let roundedBetA = roundToMultiple(idealBetA, roundTo);
+            let roundedBetB = roundToMultiple(idealBetB, roundTo);
+
+            // Garantir que a soma seja pelo menos o mínimo
+            const totalRounded = roundedBetA + roundedBetB;
+            if (totalRounded < minAmount) {
+                const difference = minAmount - totalRounded;
+                // Adicionar a diferença na aposta com menor odd (maior margem)
+                if (marginA > marginB) {
+                    roundedBetA += difference;
+                } else {
+                    roundedBetB += difference;
+                }
+            }
+
+            // Calcular lucros
+            const profitA = (roundedBetA * oddA) - (roundedBetA + roundedBetB);
+            const profitB = (roundedBetB * oddB) - (roundedBetA + roundedBetB);
+            const guaranteedProfit = Math.min(profitA, profitB);
+
+            // Exibir resultados
+            document.getElementById('isSurebet').textContent = isSurebet ? '✅ SIM' : '❌ NÃO';
+            document.getElementById('isSurebet').className = `result-value ${isSurebet ? 'profit-positive' : 'profit-negative'}`;
+            
+            document.getElementById('margin').textContent = `${marginPercentage.toFixed(2)}%`;
+            document.getElementById('margin').className = `result-value ${isSurebet ? 'profit-positive' : 'profit-negative'}`;
+            
+            document.getElementById('betA').textContent = `R$ ${roundedBetA.toFixed(2)}`;
+            document.getElementById('betB').textContent = `R$ ${roundedBetB.toFixed(2)}`;
+            document.getElementById('totalBet').textContent = `R$ ${(roundedBetA + roundedBetB).toFixed(2)}`;
+            
+            document.getElementById('profitA').textContent = `R$ ${profitA.toFixed(2)}`;
+            document.getElementById('profitA').className = `result-value ${profitA >= 0 ? 'profit-positive' : 'profit-negative'}`;
+            
+            document.getElementById('profitB').textContent = `R$ ${profitB.toFixed(2)}`;
+            document.getElementById('profitB').className = `result-value ${profitB >= 0 ? 'profit-positive' : 'profit-negative'}`;
+            
+            document.getElementById('guaranteedProfit').textContent = `R$ ${guaranteedProfit.toFixed(2)}`;
+            document.getElementById('guaranteedProfit').className = `result-value ${guaranteedProfit >= 0 ? 'profit-positive' : 'profit-negative'}`;
+
+            // Mostrar resultados
+            document.getElementById('results').style.display = 'block';
+
+            if (isSurebet && guaranteedProfit > 0) {
+                showSuccess(`🎉 Excelente! Você tem uma surebet com lucro garantido de R$ ${guaranteedProfit.toFixed(2)}!`);
+            }
+        }
+
+        // Funções para mostrar mensagens
+        function showWarning(message) {
+            const warning = document.getElementById('warning');
+            const success = document.getElementById('success');
+            warning.textContent = message;
+            warning.style.display = 'block';
+            success.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const warning = document.getElementById('warning');
+            const success = document.getElementById('success');
+            success.textContent = message;
+            success.style.display = 'block';
+            warning.style.display = 'none';
+        }
+
+        // Funções para controle de lucros
+        function loadProfits() {
+            const savedProfits = localStorage.getItem('surebetProfits');
+            return savedProfits ? JSON.parse(savedProfits) : [];
+        }
+
+        function saveProfits(profits) {
+            localStorage.setItem('surebetProfits', JSON.stringify(profits));
+        }
+
+        function updateProfitDisplay() {
+            const profits = loadProfits();
+            const total = profits.reduce((sum, profit) => sum + profit.amount, 0);
+            
+            document.getElementById('totalProfitDisplay').textContent = `R$ ${total.toFixed(2)}`;
+            
+            const historyDiv = document.getElementById('profitHistory');
+            
+            if (profits.length === 0) {
+                historyDiv.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Nenhum lucro registrado ainda</p>';
+                return;
+            }
+
+            historyDiv.innerHTML = profits.map((profit, index) => `
+                <div class="profit-entry">
+                    <div>
+                        <div class="profit-entry-value">R$ ${profit.amount.toFixed(2)}</div>
+                        <div class="profit-entry-date">${profit.date}</div>
+                    </div>
+                    <button onclick="removeProfit(${index})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        function addProfit() {
+            const newProfitValue = parseFloat(document.getElementById('newProfit').value);
+            
+            if (!newProfitValue || newProfitValue <= 0) {
+                alert('Por favor, insira um valor de lucro válido!');
+                return;
+            }
+
+            const profits = loadProfits();
+            const now = new Date();
+            const dateString = now.toLocaleString('pt-BR');
+
+            profits.push({
+                amount: newProfitValue,
+                date: dateString
+            });
+
+            saveProfits(profits);
+            updateProfitDisplay();
+            
+            document.getElementById('newProfit').value = '';
+            
+            // Mostrar mensagem de sucesso
+            const total = profits.reduce((sum, profit) => sum + profit.amount, 0);
+            alert(`✅ Lucro de R$ ${newProfitValue.toFixed(2)} adicionado com sucesso!\nTotal acumulado: R$ ${total.toFixed(2)}`);
+        }
+
+        function removeProfit(index) {
+            if (confirm('Tem certeza que deseja remover este registro de lucro?')) {
+                const profits = loadProfits();
+                profits.splice(index, 1);
+                saveProfits(profits);
+                updateProfitDisplay();
+            }
+        }
+
+        function clearProfits() {
+            if (confirm('⚠️ ATENÇÃO: Isso irá apagar todo o histórico de lucros permanentemente. Tem certeza?')) {
+                localStorage.removeItem('surebetProfits');
+                updateProfitDisplay();
+                alert('✅ Histórico de lucros limpo com sucesso!');
+            }
+        }
+
+        // Inicializar a aplicação
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProfitDisplay();
+            
+            // Adicionar eventos para calcular automaticamente quando os valores mudarem
+            ['oddA', 'oddB', 'minAmount', 'roundTo'].forEach(id => {
+                document.getElementById(id).addEventListener('input', function() {
+                    // Limpar mensagens anteriores
+                    document.getElementById('warning').style.display = 'none';
+                    document.getElementById('success').style.display = 'none';
+                });
+            });
+        });
+    </script>
+</body>
+  </html>
